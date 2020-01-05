@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
-import {type} from 'os';
-import {prependEach, nonEmptySplit} from './strings';
+import { type } from 'os';
+import { prependEach, nonEmptySplit } from './strings';
 
 function home() {
   if (type() == "Darwin") {
@@ -17,6 +17,7 @@ async function run() {
     const file = core.getInput('file');
     const skipNixBuild = core.getInput('skipNixBuild');
     const attributes = core.getInput('attributes');
+    const nixBuildArgs = core.getInput('nixBuildArgs');
     const name = core.getInput('name', { required: true });
     const signingKey = core.getInput('signingKey');
     const authToken = core.getInput('authToken')
@@ -70,14 +71,18 @@ async function run() {
           },
         }
       };
+      console.log(nixBuildArgs);
       const args = prependEach('-A', nonEmptySplit(attributes, /\s+/)).concat([file || "default.nix"]);
-      await exec.exec('nix-build', args, options);
+      const additionalArgs = nonEmptySplit(nixBuildArgs, /\s+/);
+      console.log(additionalArgs.concat(args));
+      await exec.exec('nix-build', additionalArgs.concat(args), options);
+      console.log(additionalArgs.concat(args));
       core.endGroup()
     }
   } catch (error) {
     core.setFailed(`Action failed with error: ${error}`);
-    throw(error);
-  } 
+    throw (error);
+  }
 }
 
 run();
